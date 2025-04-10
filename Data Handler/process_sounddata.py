@@ -23,7 +23,7 @@ class AugmentSoundData():
         mfcc = torch.tensor(mfcc, dtype=torch.float32)
         return mfcc
     
-    def Augment_mfcc(self):         
+    def augment_mfcc(self):         
         """
         Apply random corruptions to an MFCC tensor.
         :param mfcc: Tensor of shape (n_mfcc, time)
@@ -60,4 +60,26 @@ class AugmentSoundData():
         aug = torch.clamp(aug, min=-50.0, max=50.0)
         return aug
 
-
+    def n_cut_soundfile(self, n_cuts):
+        """
+        Cut the sound file into n_cuts segments and save each cut as a seperate sound file
+        at the location {filepath}_cut_{i}.
+        :param n_cuts: Number of cuts to make
+        """
+        cut_length = len(self.y) // n_cuts
+        cuts = [self.y[i : i + cut_length] for i in range(0, len(self.y)-cut_length, cut_length)]
+        cuts.append(self.y[len(self.y)-cut_length:]) # last cut can be shorter than cut_length
+        for i in range(len(cuts)):
+            lb.output.write_wav(f"{self.filepath}_cut_{i}", cuts[i], self.sr)
+            
+    def len_cut_soundfile(self, cut_length):
+        """
+        cuts the sound file into segments of cut_length and save each cut as a seperate 
+        sound file and save it at the location {filepath}_cut_{i}.
+        :param cut_length: Length of each cut in seconds
+        """
+        cut_length = cut_length * self.sr
+        cuts = [self.y[i : i + cut_length] for i in range(0, len(self.y)-cut_length, cut_length)]
+        cuts.append(self.y[len(self.y)-cut_length:]) # last cut can be shorter than cut_length
+        for i in range(len(cuts)):
+            lb.output.write_wav(f"{self.filepath}_cut_{i}", cuts[i], self.sr)

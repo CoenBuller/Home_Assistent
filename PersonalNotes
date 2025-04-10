@@ -1,0 +1,12 @@
+# ------ 10-04-2025 -------
+I now have the code that can extract mfcc's from a sound file and cut it into multiple 
+smaller files. This code can also augment to data to 'corrupt' it. This means I have collected
+all the needed data and only need to adjust it so that the larger files are seperated into
+multiple smaller files. Adjecent to that I also need to label all the sound files. 
+To-Do list:
+ - Cut larger soundfiles into smaller ones. 
+ - Label the data correctly 
+ - Learn how to work with the pytorch dataloader
+ - Check if for the GRU model if it can continuously evaluate sounddata. If it is given in
+    chunks of 1 seconds, can it remember the previouse chuncks when given a new one. 
+ - Train and test the wake word detector
