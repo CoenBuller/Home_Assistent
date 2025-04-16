@@ -47,6 +47,6 @@ for epoch in tqdm.tqdm(range(num_epochs)):
 
     print(f'Epoch [{epoch + 1}/{num_epochs}], Loss: {loss.item()}')
 
-if not os.path.exists("wake_word_detector/models"):
-    os.makedirs("wake_word_detector/models")
-torch.save(model.state_dict(), "wake_word_detector/models/gru_model.pth")
+if not os.path.exists("Wake_Word_Detector/models"):
+    os.makedirs("Wake_Word_Detector/models")
+torch.save(model.state_dict(), "Wake_Word_Detector/models/gru_model.pth")

@@ -2,6 +2,8 @@ import torch
 import librosa as lb
 import random
 import torchaudio.transforms as T
+from scipy.io.wavfile import write
+import os
 
 class AugmentSoundData():
 
@@ -69,17 +71,35 @@ class AugmentSoundData():
         cut_length = len(self.y) // n_cuts
         cuts = [self.y[i : i + cut_length] for i in range(0, len(self.y)-cut_length, cut_length)]
         cuts.append(self.y[len(self.y)-cut_length:]) # last cut can be shorter than cut_length
+
+        # Create directory if it doesn't exist
+        file_dir = 'C:\\Users\\coenb\\Coen_bestanden\\home_assistent\\sound_data\\audio_files\\background_audio_segments'
+        if not os.path.exists(file_dir):
+            os.makedirs(file_dir)  # Use makedirs to ensure all intermediate directories are created
+        
+        # Save each cut as a separate file in the created directory
         for i in range(len(cuts)):
-            lb.output.write_wav(f"{self.filepath}_cut_{i}", cuts[i], self.sr)
+            filename = f"{os.path.splitext(os.path.basename(self.filepath))[0]}_cut_{i}.wav"
+            path = os.path.join(file_dir, filename)
+            write(path, self.sr, cuts[i])  # Ensure data is in int16 format for WAV
             
     def len_cut_soundfile(self, cut_length):
         """
         cuts the sound file into segments of cut_length and save each cut as a seperate 
-        sound file and save it at the location {filepath}_cut_{i}.
+        sound file and save it at the location {filepath}_cut_{i} in the map 'background_audio_segments'.
         :param cut_length: Length of each cut in seconds
         """
         cut_length = cut_length * self.sr
         cuts = [self.y[i : i + cut_length] for i in range(0, len(self.y)-cut_length, cut_length)]
         cuts.append(self.y[len(self.y)-cut_length:]) # last cut can be shorter than cut_length
+
+        # Create directory if it doesn't exist
+        file_dir = 'C:\\Users\\coenb\\Coen_bestanden\\home_assistent\\sound_data\\audio_files\\background_audio_segments'
+        if not os.path.exists(file_dir):
+            os.makedirs(file_dir)  # Use makedirs to ensure all intermediate directories are created
+        
+        # Save each cut as a separate file in the created directory
         for i in range(len(cuts)):
-            lb.output.write_wav(f"{self.filepath}_cut_{i}", cuts[i], self.sr)
+            filename = f"{os.path.splitext(os.path.basename(self.filepath))[0]}_cut_{i}.wav"
+            path = os.path.join(file_dir, filename)
+            write(path, self.sr, cuts[i])  # Ensure data is in int16 format for WAV

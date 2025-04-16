@@ -10,3 +10,6 @@ To-Do list:
  - Check if for the GRU model if it can continuously evaluate sounddata. If it is given in
     chunks of 1 seconds, can it remember the previouse chuncks when given a new one. 
  - Train and test the wake word detector
+
+# ------ 14-04-2025 -------
+I have now cutted the background audio into smaller audio files. I will now work with this but if it doesn't work, check if the GRU will identify correctly if the wake word is seperated over different audio segements. 
