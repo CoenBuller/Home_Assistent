@@ -1,29 +1,30 @@
+from scipy.io.wavfile import write
+from tqdm import tqdm
 import torch 
+import torchaudio
 import librosa as lb
 import random
 import torchaudio.transforms as T
-from scipy.io.wavfile import write
 import os
+
 
 class AugmentSoundData():
 
     def __init__(self, filepath, sr=16000):
         self.filepath = filepath
-        self.y, self.sr = lb.load(filepath, sr=sr)
+        self.y, self.sr = lb.load(filepath, sr=sr)  # Load the audio file
         self.mfcc = self.extract_mfcc()
 
     def extract_mfcc(self, n_features=13):
         """
         Extract MFCC features from the audio file.
-        :param filepath: Path to the audio file
         :param sr: Sample rate
         :param n_features: Number of MFCC features to extract
         :return: MFCC tensor of shape (n_mfcc, time)
         """
-
         mfcc = lb.feature.mfcc(y=self.y, sr=self.sr, n_mfcc=n_features)
-        mfcc = torch.tensor(mfcc, dtype=torch.float32)
-        return mfcc
+                                        
+        return torch.tensor(mfcc)  
     
     def augment_mfcc(self):         
         """
@@ -62,44 +63,46 @@ class AugmentSoundData():
         aug = torch.clamp(aug, min=-50.0, max=50.0)
         return aug
 
-    def n_cut_soundfile(self, n_cuts):
+    def n_cut_soundfile(self, n_cuts, root=None):
         """
         Cut the sound file into n_cuts segments and save each cut as a seperate sound file
         at the location {filepath}_cut_{i}.
         :param n_cuts: Number of cuts to make
         """
+
+        if root is None:
+            raise ValueError("Root directory must be specified.") #User must specify a root directory to save the audio
+        elif not os.path.exists(root):
+            os.makedirs(root)
+        
         cut_length = len(self.y) // n_cuts
         cuts = [self.y[i : i + cut_length] for i in range(0, len(self.y)-cut_length, cut_length)]
         cuts.append(self.y[len(self.y)-cut_length:]) # last cut can be shorter than cut_length
 
-        # Create directory if it doesn't exist
-        file_dir = 'C:\\Users\\coenb\\Coen_bestanden\\home_assistent\\sound_data\\audio_files\\background_audio_segments'
-        if not os.path.exists(file_dir):
-            os.makedirs(file_dir)  # Use makedirs to ensure all intermediate directories are created
-        
         # Save each cut as a separate file in the created directory
-        for i in range(len(cuts)):
-            filename = f"{os.path.splitext(os.path.basename(self.filepath))[0]}_cut_{i}.wav"
-            path = os.path.join(file_dir, filename)
-            write(path, self.sr, cuts[i])  # Ensure data is in int16 format for WAV
+        for i in tqdm(range(len(cuts))):
+            filename = os.path.basename(self.filepath).rstrip('.wav')
+            file_path = os.path.join(root, f"{filename}_cut_{i}.wav")
+            write(file_path, self.sr, cuts[i])  # Ensure data is in int16 format for WAV
             
-    def len_cut_soundfile(self, cut_length):
+    def len_cut_soundfile(self, cut_length, root=None):
         """
         cuts the sound file into segments of cut_length and save each cut as a seperate 
         sound file and save it at the location {filepath}_cut_{i} in the map 'background_audio_segments'.
         :param cut_length: Length of each cut in seconds
         """
+
+        if root is None:
+            raise ValueError("Root directory must be specified.") #User must specify a root directory to save the audio
+        elif not os.path.exists(root): 
+            os.makedirs(root)
+
         cut_length = cut_length * self.sr
         cuts = [self.y[i : i + cut_length] for i in range(0, len(self.y)-cut_length, cut_length)]
         cuts.append(self.y[len(self.y)-cut_length:]) # last cut can be shorter than cut_length
-
-        # Create directory if it doesn't exist
-        file_dir = 'C:\\Users\\coenb\\Coen_bestanden\\home_assistent\\sound_data\\audio_files\\background_audio_segments'
-        if not os.path.exists(file_dir):
-            os.makedirs(file_dir)  # Use makedirs to ensure all intermediate directories are created
         
         # Save each cut as a separate file in the created directory
-        for i in range(len(cuts)):
-            filename = f"{os.path.splitext(os.path.basename(self.filepath))[0]}_cut_{i}.wav"
-            path = os.path.join(file_dir, filename)
-            write(path, self.sr, cuts[i])  # Ensure data is in int16 format for WAV
+        for i in tqdm(range(len(cuts))):
+            filename = os.path.basename(self.filepath).rstrip('.wav')
+            file_path = os.path.join(root, f"{filename}_cut_{i}.wav")
+            write(file_path, self.sr, cuts[i])  # Ensure data is in int16 format for WAV

@@ -4,4 +4,4 @@ filename = "C:\\Users\\coenb\\Coen_bestanden\\home_assistent\\sound_data\\audio_
 cut_length = 2 #s
 
 background_audio = AugmentSoundData(filename, sr=16000)
-background_audio.len_cut_soundfile(cut_length=cut_length) #s
+background_audio.len_cut_soundfile(cut_length=cut_length, root='C:\\Users\\coenb\\Coen_bestanden\\home_assistent\\sound_data\\wake_word_audio\\non_wake_word_map') #s
