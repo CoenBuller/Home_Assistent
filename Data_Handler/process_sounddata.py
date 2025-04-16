@@ -11,9 +11,9 @@ import os
 class AugmentSoundData():
 
     def __init__(self, filepath, sr=16000):
-        self.filepath = filepath
-        self.y, self.sr = lb.load(filepath, sr=sr)  # Load the audio file
-        self.mfcc = self.extract_mfcc()
+        self._filepath = filepath
+        self._y, self._sr = lb.load(filepath, sr=sr)  # Load the audio file
+        self._mfcc = self.extract_mfcc()
 
     def extract_mfcc(self, n_features=13):
         """
@@ -26,13 +26,16 @@ class AugmentSoundData():
                                         
         return torch.tensor(mfcc)  
     
-    def augment_mfcc(self):         
+    def augment_mfcc(self, mfcc=None):         
         """
         Apply random corruptions to an MFCC tensor.
         :param mfcc: Tensor of shape (n_mfcc, time)
         :return: Augmented MFCC tensor (same shape)
         """
-        aug = self.mfcc.clone()
+        if mfcc is None:
+            aug = self.mfcc.clone()
+        else:
+            aug = mfcc.clone()
 
         # --- 1. Time masking (simulate dropouts)
         if random.random() < 0.5:
@@ -106,3 +109,14 @@ class AugmentSoundData():
             filename = os.path.basename(self.filepath).rstrip('.wav')
             file_path = os.path.join(root, f"{filename}_cut_{i}.wav")
             write(file_path, self.sr, cuts[i])  # Ensure data is in int16 format for WAV
+    
+    @property
+    def mfcc(self):
+        return self._mfcc.clone()
+    
+    @property
+    def filepath(self):
+        return self._filepath
+    
+
+    
