@@ -26,16 +26,14 @@ class AugmentSoundData():
                                         
         return torch.tensor(mfcc)  
     
-    def augment_mfcc(self, mfcc=None):         
+    @staticmethod
+    def augment_mfcc(mfcc=None):         
         """
         Apply random corruptions to an MFCC tensor.
         :param mfcc: Tensor of shape (n_mfcc, time)
         :return: Augmented MFCC tensor (same shape)
         """
-        if mfcc is None:
-            aug = self.mfcc.clone()
-        else:
-            aug = mfcc.clone()
+        aug = mfcc.clone()
 
         # --- 1. Time masking (simulate dropouts)
         if random.random() < 0.5:

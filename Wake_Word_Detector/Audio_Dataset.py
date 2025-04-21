@@ -1,7 +1,4 @@
-from Data_Handler.process_sounddata import AugmentSoundData as asd
-from torch.utils.data import Dataset
-import torchaudio
-import torch 
+from torch.utils.data import Dataset 
 import os
 
 """"
@@ -14,7 +11,7 @@ import os
 
 class audioDataset(Dataset):
 
-    def __init__(self, root_dir, labels=None, transform=None):
+    def __init__(self, root_dir, labels=None, transformers=None):
         """
         Args:
             root_dir (Path): Path to the root directory containing all the sub directories.
@@ -22,7 +19,7 @@ class audioDataset(Dataset):
             transform (callable, optional): Optional transform to be applied on a sample.
         """
         self._labels = labels
-        self.transform = transform
+        self.transformers = transformers
         self.root_dir = root_dir
         self.sub_dirs= os.listdir(root_dir)
         self.labels_dict = self.label_dirs()
@@ -68,16 +65,21 @@ class audioDataset(Dataset):
         return file_dict
 
     def __len__(self):
-        return len(self.file_dict)
+        return len(self.labeled_files)
     
 
     def __getitem__(self, idx):
 
-        audio_path = self.file_dict.keys()[idx]
-        label = self.file_dict[audio_path]
+        file_name = list(self.labeled_files.keys())[idx]
+        label = self.labeled_files[file_name]
+        label_dir = list(self.labels_dict.keys())[list(self.labels_dict.values()) == label]
+        audio_path = os.path.join(self.root_dir, label_dir, file_name) #Use full path to assure correct loading of the file
 
-        if self.transform:
-            transformed = self.transform(audio_path)
+        if self.transformers:
+            x = audio_path
+            for transform in self.transformers:
+                x = transform(x)
+            transformed = x
             return audio_path, label, transformed
             
         return audio_path, label
@@ -86,7 +88,7 @@ class audioDataset(Dataset):
         print(f"Audio dataset: {self.__class__.__name__}(")
         print(f"    Number of classes: {len(self.sub_dirs)}")
         print(f"    Number of files: {len(self.labeled_files)}")
-        print(f"    Transformer: {self.transform}\n    )")
+        print(f"    Transformer: {self.transformers}\n    )")
         architecture_str = f"Directory architecture: \n{os.path.basename(self.root_dir)}\n"
         for dir in self.sub_dirs:
             architecture_str += f" {' '*int(len(os.path.basename(self.root_dir))/4)}| \n{' '*int(len(os.path.basename(self.root_dir))/4)} |- {dir}\n"
@@ -96,7 +98,6 @@ class audioDataset(Dataset):
     def files(self):
         return self.labeled_files
 
-    
     @property
     def labels(self):
         return self.labels_dict
