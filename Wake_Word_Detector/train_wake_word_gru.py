@@ -1,11 +1,8 @@
-import Data_Handler.process_sounddata as psd
-import Wake_Word_Detector.gru_model as gm
-import torch.optim as optim
-import torchaudio
-import torch
-from tqdm import tqdm
-import os
+import Wake_Word_Detector.Audio_Dataset as ad
+from torch.utils.data import DataLoader
 
-train_data = torch.utils.data.Dataset(roo)
+path = 'C:\\Users\\coenb\\Coen_bestanden\\home_assistent\\sound_data\\wake_word_audio'
+train_data = ad.audioDataset(path)
 
+train_loader = DataLoader(train_data, batch_size=200, shuffle=True)
 
