@@ -45,7 +45,7 @@ while recording:
         data = audio_queue.get()
         frames.append(data)
 
-audio_data = np.concatenate(frames, axis=0)
-write('background_noise.wav', SAMPLE_RATE, audio_data)
+
+
     
              

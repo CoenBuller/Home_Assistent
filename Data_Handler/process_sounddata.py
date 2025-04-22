@@ -22,7 +22,7 @@ class AugmentSoundData():
         :param n_features: Number of MFCC features to extract
         :return: MFCC tensor of shape (n_mfcc, time)
         """
-        mfcc = lb.feature.mfcc(y=self.y, sr=self.sr, n_mfcc=n_features)
+        mfcc = lb.feature.mfcc(y=self._y, sr=self._sr, n_mfcc=n_features)
                                         
         return torch.tensor(mfcc)  
     

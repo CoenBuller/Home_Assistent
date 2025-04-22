@@ -1,4 +1,6 @@
 from torch.utils.data import Dataset 
+from Data_Handler.process_sounddata import AugmentSoundData
+import numpy as np
 import os
 
 """"
@@ -11,7 +13,7 @@ import os
 
 class audioDataset(Dataset):
 
-    def __init__(self, root_dir, labels=None, transformers=None):
+    def __init__(self, root_dir, labels=None, transformers=None, equal_size=False):
         """
         Args:
             root_dir (Path): Path to the root directory containing all the sub directories.
@@ -21,7 +23,9 @@ class audioDataset(Dataset):
         self._labels = labels
         self.transformers = transformers
         self.root_dir = root_dir
+        self.equal_size = equal_size
         self.sub_dirs= os.listdir(root_dir)
+        self.len_sub_dirs = np.array([len(dir) for dir in self.sub_dirs])
         self.labels_dict = self.label_dirs()
         self.labeled_files = self.label_files()
 
@@ -51,13 +55,15 @@ class audioDataset(Dataset):
     def label_files(self):
         """
         Label the audio files in the sub directories.
+
         """
+
         file_dict = {}
         for dir in self.sub_dirs:
             for file in os.listdir(os.path.join(self.root_dir, dir)):
-                if os.path.isfile(os.path.join(self.root_dir, dir, file)): #only accepts .mp3 and .wav files for now
+                if os.path.isfile(os.path.join(self.root_dir, dir, file)):
                     file_dict[file] = self.labels_dict[dir]
-                elif os.path.isdir(file):
+                elif os.path.isdir(file):                        
                     raise ValueError("The sub directories of the root directory cannot contain new directories.")
                 else:
                     raise ValueError("All items in the sub directories must be .mp3 or .wav.")
@@ -72,17 +78,14 @@ class audioDataset(Dataset):
 
         file_name = list(self.labeled_files.keys())[idx]
         label = self.labeled_files[file_name]
-        label_dir = list(self.labels_dict.keys())[list(self.labels_dict.values()) == label]
-        audio_path = os.path.join(self.root_dir, label_dir, file_name) #Use full path to assure correct loading of the file
+        dir_idx = np.array(list(self.labels_dict.values())) == label
+        label_dir = np.array(list(self.labels_dict.keys()))[dir_idx]
+        audio_path = os.path.join(self.root_dir, label_dir[0], file_name) #Use full path to assure correct loading of the file
 
-        if self.transformers:
-            x = audio_path
-            for transform in self.transformers:
-                x = transform(x)
-            transformed = x
-            return audio_path, label, transformed
-            
-        return audio_path, label
+        
+        sound_file = AugmentSoundData(audio_path)
+        
+        return AugmentSoundData.augment_mfcc(sound_file.mfcc), audio_path, label
     
     def __str__(self):
         print(f"Audio dataset: {self.__class__.__name__}(")

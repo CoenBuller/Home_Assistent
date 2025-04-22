@@ -2,9 +2,12 @@ import torch
 import librosa
 import pyaudio
 import sounddevice as sd
-import numpy as np
-from Home_Assistent.gru_model import WakeWordModel
+import Wake_Word_Detector.gru_model as mod
+import Data_Handler.process_sounddata as psd
 import time
+import threading
+import queue
+import numpy as np
 
 #Configuration for listening to audio
 SAMPLE_RATE = 16000
@@ -12,36 +15,40 @@ DURATION = 1  # seconds
 N_MFCC = 13
 THRESHOLD = 0.5  # Threshold for wake word detection
 
-model = WakeWordModel(13)
-model.load_state_dict(torch.load("wake_word_detector/models/gru_model.pth"))
+model = mod.WakeWordModel(input_size=13, hidden_size=16, num_layers=1, num_classes=1)
+model.load_state_dict(torch.load("C:\\Users\\coenb\\Coen_bestanden\\home_assistent\\Home_Assistent\\Models\\wakeWord_detector_model.pth"))
 model.eval()
 
-def record_audio(duration=DURATION, sample_rate=SAMPLE_RATE):
-    """Record audio for a given duration."""
-    audio = sd.rec(int(duration * sample_rate), samplerate=sample_rate, channels=1, dtype='float32')
-    sd.wait() 
-    return audio.squeeze()
+audio_queue = queue.Queue() # Queue to hold audio data
+recording = True # Flag to control recording
 
-def extract_mfcc_from_array(audio_array, sr=SAMPLE_RATE, n_mfcc=N_MFCC):
-    audio_array, _ = librosa.effects.trim(audio_array)
-    mfcc = librosa.feature.mfcc(y=audio_array, sr=sr, n_mfcc=n_mfcc)
-    # mfcc = (mfcc - np.mean(mfcc)) / np.std(mfcc)
-    mfcc_tensor = torch.tensor(mfcc.T, dtype=torch.float32).unsqueeze(0)
-    return mfcc_tensor
+def callback(in_data, frames, time, status):
+    """Callback function to handle audio input"""
+    if status:
+        print(status)
+    audio_queue.put(in_data.copy())
 
+def record_audio(channels=1, rate=16000):
+    """Function to record audio from the microphone"""
+    with sd.InputStream(samplerate=rate,channels=channels, dtype='int16', callback=callback):
+        print("Recording... Press Enter to stop")
+        input()
+        global recording
+        recording = False
+        print("Recording stopped")  
 
-def start_listening(model):
-    print("Listening for wake word... Press Ctrl+C to stop.")
-    try:
-        while True:
-            audio = record_audio()
-            mfcc_tensor = extract_mfcc_from_array(audio)
-            time_0 = time.time()
-            if model(mfcc_tensor).item() > THRESHOLD:
-                print("🚨 Wake word detected!")
-                # Optional: Do something when wake word is detected
-                print(time.time() - time_0)
-    except KeyboardInterrupt:
-        print("\nStopped listening.")
+thread = threading.Thread(target=record_audio)
+thread.start()
 
-start_listening(model)
+while recording:
+    while not audio_queue.empty():
+        data = audio_queue.get()
+
+        audio_np = np.frombuffer(data, dtype=np.int16).astype(np.float32) / 32768.0  # Normalize to range [-1, 1]
+
+        mfcc = librosa.feature.mfcc(y=audio_np, sr=16000, n_mfcc=13)
+        mfcc_tensor = torch.tensor(mfcc, dtype=torch.float32)
+        output = model(mfcc_tensor.T)
+        if output[0].item() > 0.5:
+            print("Wake word detected!")
+            
