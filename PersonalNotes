@@ -13,3 +13,6 @@ To-Do list:
 
 # ------ 14-04-2025 -------
 I have now cutted the background audio into smaller audio files. I will now work with this but if it doesn't work, check if the GRU will identify correctly if the wake word is seperated over different audio segements. 
+
+# ------ 16-05-2025 -------
+Make shure that all the audio files are only two seconds long, train the model again and change the test_wake_word_detector.py file just so it constantly checks audio pieces of 2 seconds.

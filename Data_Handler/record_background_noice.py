@@ -32,8 +32,6 @@ def record_audio(channels=CHANNELS, rate=SAMPLE_RATE):
         recording = False
         print("Recording stopped")  
 
-
-
 # Start the audio recording in a separate thread
 # This allows the main thread to continue running and accepting user input
 thread = threading.Thread(target=record_audio)
