@@ -9,12 +9,12 @@ import torchaudio.transforms as T
 import os
 
 
-
 class AugmentSoundData():
 
     def __init__(self, filepath: str, sr: int = 16000):
         self._filepath = filepath
         self._y, self._sr = lb.load(filepath, sr=sr)  # Load the audio file
+        self._y = torch.Tensor(self._y)
         self._mfcc = self.extract_mfcc()
 
     def extract_mfcc(self, n_features=13) -> torch.Tensor:
@@ -24,7 +24,7 @@ class AugmentSoundData():
         :param n_features: Number of MFCC features to extract
         :return: MFCC tensor of shape (n_mfcc, time)
         """
-        mfcc = lb.feature.mfcc(y=self._y, sr=self._sr, n_mfcc=n_features)
+        mfcc = lb.feature.mfcc(y=self._y.numpy(), sr=self._sr, n_mfcc=n_features)
                                         
         return torch.tensor(mfcc)  
     
@@ -38,17 +38,31 @@ class AugmentSoundData():
         aug = mfcc.clone()
 
         # --- 1. Time masking (simulate dropouts)
-        if random.random() < 0.5:
-            time_mask = T.TimeMasking(time_mask_param=10)
-            aug = time_mask(aug)
+        time_mask = T.TimeMasking(time_mask_param=10)
+        aug = time_mask(aug)
 
         # --- 2. Frequency masking (simulate mic response loss)
-        if random.random() < 0.5:
-            freq_mask = T.FrequencyMasking(freq_mask_param=4)
-            aug = freq_mask(aug)
+        idx = random.randint(0, mfcc.shape[0] - 1)
+        aug[idx] = 0
 
         return aug
 
+    @staticmethod
+    def copy_file(src: str, dst: str) -> None:
+        """
+        Copy a file from src to dst.
+        :param src: Source file path
+        :param dst: Destination file path
+        """
+        if not os.path.exists(src):
+            raise FileNotFoundError(f"Source file {src} does not exist.")
+        
+        if not os.path.exists(os.path.dirname(dst)):
+            os.makedirs(os.path.dirname(dst))
+        
+        with open(src, 'rb') as fsrc:
+            with open(dst, 'wb') as fdst:
+                fdst.write(fsrc.read())
 
     def n_cut_soundfile(self, n_cuts, root=None) -> None:
         """
@@ -103,13 +117,13 @@ class AugmentSoundData():
         :param duration: Desired duration in seconds
         """
         duration = duration * self._sr
-
-        if len(self.y) < duration:
+        adj_y = self._y
+        if len(self._y) < duration:
             # Pad with zeros
             padding = torch.zeros(duration - len(self._y))
-            adj_y = torch.cat((padding, self.y)) 
-        else:
-            max_id = torch.argmax(self.y)
+            adj_y = torch.cat((padding, self._y)) 
+        elif len(self._y) > duration:
+            max_id = torch.argmax(torch.Tensor(self._y))
             if max_id < duration // 2: # Left of max_id is shorter than duration // 2, so we take from start to duration
                 adj_y = self._y[:duration]
             elif max_id > len(self._y) - duration // 2: # Right of max_id is shorter than duration // 2, so we take from max_id - duration // 2 to end
@@ -117,6 +131,8 @@ class AugmentSoundData():
             else:
                 adj_y = self._y[max_id - duration // 2 : max_id + duration // 2]
         
+        self._y = adj_y
+        self._mfcc = self.extract_mfcc()
         return torch.Tensor(adj_y)
 
     

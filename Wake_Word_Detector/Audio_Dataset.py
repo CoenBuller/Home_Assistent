@@ -1,6 +1,7 @@
 from torch.utils.data import Dataset 
-from Data_Handler.process_sounddata import AugmentSoundData
+from process_sounddata import AugmentSoundData
 import numpy as np
+import torch
 import os
 
 """"
@@ -82,10 +83,13 @@ class audioDataset(Dataset):
         label_dir = np.array(list(self.labels_dict.keys()))[dir_idx]
         audio_path = os.path.join(self.root_dir, label_dir[0], file_name) #Use full path to assure correct loading of the file
 
+        sound_file = AugmentSoundData(audio_path, sr=16000)
+        sound_file.adjust_duration(2)
+
+        labels = torch.zeros(len(self.sub_dirs), dtype=torch.float32)
+        labels[label] = 1.0
         
-        sound_file = AugmentSoundData(audio_path)
-        
-        return AugmentSoundData.augment_mfcc(sound_file.mfcc), audio_path, label
+        return AugmentSoundData.augment_mfcc(sound_file.mfcc), audio_path, labels
     
     def __str__(self):
         print(f"Audio dataset: {self.__class__.__name__}(")

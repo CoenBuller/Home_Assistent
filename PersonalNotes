@@ -16,3 +16,8 @@ I have now cutted the background audio into smaller audio files. I will now work
 
 # ------ 16-05-2025 -------
 Make shure that all the audio files are only two seconds long, train the model again and change the test_wake_word_detector.py file just so it constantly checks audio pieces of 2 seconds.
+
+# ------ 17-05-2025 -------
+Check how RNNs exactly work, especially if you take one mfcc frame and feed that to the RNN, will it then update its internal state. In other words: find out if you can feed the RNN one MFCC segment at a time or do you need to feed it 2s long segments each time. The latter would significantly increase the computation time and would suck for the raspberry. 
+
+Also chech the masking of the MFCC spectogram during training. It now sets a time series and a certain frequency to zero but perhaps it is better if it is set to the minimum value of that spectogram. Look into that
