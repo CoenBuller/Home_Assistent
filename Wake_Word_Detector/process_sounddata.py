@@ -42,8 +42,10 @@ class AugmentSoundData():
         aug = time_mask(aug)
 
         # --- 2. Frequency masking (simulate mic response loss)
-        idx = random.randint(0, mfcc.shape[0] - 1)
-        aug[idx] = 0
+        number_of_freq_masks = random.randint(1, 3)
+        for _ in range(number_of_freq_masks):
+            idx = random.randint(0, mfcc.shape[0] - 1)
+            aug[idx] = 0
 
         return aug
 
@@ -87,7 +89,7 @@ class AugmentSoundData():
             write(file_path, self._sr, cuts[i])  # Ensure data is in int16 format for WAV
 
 
-    def len_cut_soundfile(self, cut_length: int, root: str|None = None) -> None:
+    def len_cut_soundfile(self, cut_length: int, root: str|None = None, delete_file: bool = False) -> None:
         """
         cuts the sound file into segments of cut_length and save each cut as a seperate 
         sound file and save it at the location {filepath}_cut_{i} in the map 'background_audio_segments'.
@@ -107,7 +109,11 @@ class AugmentSoundData():
         for i in tqdm(range(len(cuts))):
             filename = os.path.basename(self.filepath).rstrip('.wav')
             file_path = os.path.join(root, f"{filename}_cut_{i}.wav")
-            write(file_path, self._sr, cuts[i])  # Ensure data is in int16 format for WAV
+            write(file_path, self._sr, cuts[i].numpy())  # Ensure data is in int16 format for WAV
+        
+        # Delete the original file if specified
+        if delete_file:
+            os.remove(self._filepath)
     
 
     def adjust_duration(self, duration: int) -> Tensor:
