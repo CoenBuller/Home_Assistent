@@ -11,3 +11,6 @@ PersonalNotes.txt
 
 # MOdels
 Models/
+
+# Files that are used to adjust my specific data
+Data_Handler/
