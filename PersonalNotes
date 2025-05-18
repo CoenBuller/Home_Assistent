@@ -21,3 +21,14 @@ Make shure that all the audio files are only two seconds long, train the model a
 Check how RNNs exactly work, especially if you take one mfcc frame and feed that to the RNN, will it then update its internal state. In other words: find out if you can feed the RNN one MFCC segment at a time or do you need to feed it 2s long segments each time. The latter would significantly increase the computation time and would suck for the raspberry. 
 
 Also chech the masking of the MFCC spectogram during training. It now sets a time series and a certain frequency to zero but perhaps it is better if it is set to the minimum value of that spectogram. Look into that
+
+# ------ 18-05-2025 -------
+The RNN does activate on the 'Jarvis' input but also on silence. To increase accuracy I will make it look at one second windows, record new samples of me saying jarvis within a one second timeframe, and train the model again. This will also reduce computation cost for the model. Also increase the stepsize in which program 'convolutes' over the recorded audio. This hsould also decrease computation cost and create a more accurate output. Next to that also implement a sleep method so the model doesn't detect the wakeword multiple times in the same audio.
+
+It appears that it does recognize Jarvis but other words like nice and stuff are also detected. This means that I have to record audio files that contian the word nice and similar sounding words. Furthermore it might be better if we train applying softmax at the end, then we can train the model on the probabilities. Also change the criteria on the accuracy form the maximum to the maximum value and the probability must be higher than a certain threshold. Also add validation loss to the 'accuracy' function. 
+
+To Do:
+- Record audio files containing words similar to jarvis and word that sound similar to nice. 
+- Apply softmax at the end of fully connected line. 
+- Change accuracy in such a way that the threshold must be above a certain value (e.g. 99% certain)
+- Add loss value to the 'accuracy' function
