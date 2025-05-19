@@ -32,3 +32,10 @@ To Do:
 - Apply softmax at the end of fully connected line. 
 - Change accuracy in such a way that the threshold must be above a certain value (e.g. 99% certain)
 - Add loss value to the 'accuracy' function
+
+# ------ 19-05-2025 ------
+I've applied a softmax to the outputs of the model, changed the accuracy threshold to higher than 99% for the correct label and lower then 1% for the incorrect label. This didn't solve the previous problem, and made it appear the model is highly focussing on the 'vis' part of Jarvis. The reason for this suspicion is due to the fact that the model thinks I am saying Jarvis when in reality I am saying 'is' or 'nice' or 'vis'. At the same time the model doesn't get triggered when I say 'Jar', which confirms my suspicion. So adding words that look like 'is', 'nice', or 'vis' in the non wakeword audio map might improve this. Also think about how to go over the background noice and common voice audio files. A better approach would be to split up the background and common voice audio in a convolutional manner. The same way we process the live audio input when the model tries to determine wether I am saying 'Jarvis' or not. 
+
+To Do:
+- Record audio files containing words similar to jarvis and word that sound similar to 'nice', 'is' and 'vis'.
+- Break the longer non wakeword audio files up in a convolutional manner. The same way we process the live audio for detecting the wakeword.

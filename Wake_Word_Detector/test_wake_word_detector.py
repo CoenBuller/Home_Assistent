@@ -25,8 +25,9 @@ def process_audio(audio_data, model, i):
         output = model(mfcc).squeeze(0)  # Add batch dimension
 
     output = torch.softmax(output, dim=1)  # Apply softmax to get probabilities
-    max_prob, predicted_class = torch.max(output, 1)  # Get the predicted class and max probability
-    if predicted_class == 1 and max_prob > 0.99 and (output[:,1] - output[:,0]) > 0.5:  # Assuming 1 is the class for the wake word
+    max_prob, predicted_class = torch.max(output, 1)
+    min_prob, _ = torch.min(output, 1)  # Get the predicted class and max probability
+    if predicted_class == 1 and max_prob > 0.99 and min_prob <0.01:  # Assuming 1 is the class for the wake word
         print(output)
         print("Hello there! Jarvis is the G listening to you! wagwan bruv!")
         wav.write(f"C:\\Users\\coenb\\Coen_bestanden\\home_assistent\\Home_Assistent\\\\audio_sample_{int(i)}.wav", SAMPLE_RATE, audio_data)
