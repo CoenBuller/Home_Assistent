@@ -1,5 +1,5 @@
 from torch.utils.data import Dataset 
-from process_sounddata import AugmentSoundData
+from Home_Assistent.Wake_Word_Detector.training.process_sounddata import AugmentSoundData
 import numpy as np
 import torch
 import os

@@ -1,4 +1,4 @@
-from Home_Assistent.Wake_Word_Detector.process_sounddata import AugmentSoundData
+from Home_Assistent.Wake_Word_Detector.training.process_sounddata import AugmentSoundData
 import matplotlib.pyplot as plt
 import librosa as lb
 
