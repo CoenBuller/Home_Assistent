@@ -1,5 +1,5 @@
 from torch.utils.data import DataLoader
-import Audio_Dataset as ad
+import Home_Assistent.Wake_Word_Detector.training.Audio_Dataset as ad
 import gru_model as model
 import numpy as np
 import torch.optim as optim
@@ -19,7 +19,8 @@ model.to(device)
 
 optimizer = optim.AdamW(model.parameters(), lr=0.001)
 criterion = torch.nn.BCEWithLogitsLoss()
-scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=2)
+scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='max', factor=0.1, patience=0)
+
 
 def accuracy(model, data_loader, criterion):
     model.eval()
@@ -29,7 +30,7 @@ def accuracy(model, data_loader, criterion):
     with torch.no_grad():
         for inputs, _, labels in tqdm(data_loader):
             labels = labels.float()
-            outputs = model(inputs.permute(2, 0, 1)).squeeze(0)
+            outputs = model(inputs.permute(1, 0, 2)).squeeze(0)
             loss += criterion(outputs, labels)
             total += labels.size(0)
             outputs = torch.softmax(outputs, 1)
@@ -42,7 +43,7 @@ epochs = 50
 for epoch in range(epochs):
     model.train()
     for i, (inputs, _, labels) in enumerate(train_loader):
-        inputs = inputs.permute(2, 0, 1)
+        inputs = inputs.permute(1, 0, 2)
         labels = labels.float()
         optimizer.zero_grad()
         outputs = model(inputs)
@@ -54,14 +55,14 @@ for epoch in range(epochs):
         
         max_val, max_idx = torch.max(outputs, 1)
         min_val, _ = torch.min(outputs, 1)
-        print(f'Epoch [{epoch+1}/{epochs}], Step [{i+1}/{len(train_loader)}], Loss: {loss.item():.8f}, Accuracy: {((max_idx==labels.argmax(1)) & (max_val>0.95) & (min_val<0.1)).float().mean().item():.4f}')
+        print(f'Epoch [{epoch+1}/{epochs}], Step [{i+1}/{len(train_loader)}], Loss: {loss.item():.8f}, Accuracy: {((max_idx==labels.argmax(1)) & (max_val>0.99) & (min_val<0.01)).float().mean().item():.4f}')
     
     accuracy_value, avg_loss = accuracy(model, train_loader, criterion)
     scheduler.step(avg_loss)
-    print(f'Epoch: {epoch+1}, Accuracy {accuracy_value:.4f}')
-    torch.save(model.state_dict(), 'Models\\wakeWord_detector_model.pth')
+    print(f'Epoch: {epoch+1}, Accuracy {accuracy_value:.4f}, avg loss {avg_loss:.4f}')
+    torch.save(model.state_dict(), 'Models\\wakeWord_detector_model_2.pth')
     if accuracy_value > 0.999:
-        print("Model accuracy is above 99.5%, stopping training.")
+        print("Model accuracy is above 99.9%, stopping training.")
         break
 
 

@@ -4,6 +4,7 @@ from torch import Tensor
 import torch 
 import torchaudio
 import librosa as lb
+import python_speech_features as psf
 import random
 import torchaudio.transforms as T
 import os
@@ -24,9 +25,9 @@ class AugmentSoundData():
         :param n_features: Number of MFCC features to extract
         :return: MFCC tensor of shape (n_mfcc, time)
         """
-        mfcc = lb.feature.mfcc(y=self._y.numpy(), sr=self._sr, n_mfcc=n_features)
+        mfcc = psf.mfcc(self._y.numpy(), samplerate=self._sr, numcep=n_features)
                                         
-        return torch.tensor(mfcc)  
+        return torch.tensor(mfcc, dtype=torch.float32)  # Transpose to (n_mfcc, time)
     
     @staticmethod
     def augment_mfcc(mfcc: Tensor) -> Tensor:         
@@ -65,6 +66,30 @@ class AugmentSoundData():
         with open(src, 'rb') as fsrc:
             with open(dst, 'wb') as fdst:
                 fdst.write(fsrc.read())
+
+    def window_cut_soundfile(self, window_size: int, stepsize: int|float, root: str|None = None) -> None:
+        """ 
+        Cut the sound file into segments of window_size and save each cut as a seperate sound file
+        at the location {filepath}_cut_{i}.
+        :param window_size: Length of each cut in seconds
+        :param stepsize: Stepsize between cuts in seconds
+        :param root: Root directory to save the cuts
+        :return: None
+        """
+
+        if root is None:
+            raise ValueError("Root directory must be specified to save the files.") 
+        
+        if not os.path.exists(root):
+            os.makedirs(root)
+        window_size = window_size * self._sr
+        stepsize = int(stepsize * self._sr)
+
+        for step in range(0, len(self._y) - window_size, stepsize):
+            cut = self._y[step : step + window_size]
+            filename = os.path.basename(self._filepath).rstrip('.wav')
+            file_path = os.path.join(root, f"{filename}_cut_{step}.wav")
+            write(file_path, self._sr, cut.numpy())
 
     def n_cut_soundfile(self, n_cuts, root=None) -> None:
         """

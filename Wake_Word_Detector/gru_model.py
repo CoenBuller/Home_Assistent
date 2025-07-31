@@ -1,4 +1,5 @@
 import torch.nn as nn
+import torch
 
 class WakeWordModel(nn.Module):
     """This is a GRU model that can be trained for the wake word detector"""
